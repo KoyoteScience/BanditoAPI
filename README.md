@@ -52,7 +52,8 @@ var map_headline_to_reward = {
     'Take the red pill': 0,
 }
 var model_id = 'app_id=code_snippet_example'
-var model_type = 'AverageCategoryMembership', // options include CovarianceLinearRegression, LinearAlgebraLinearRegression, AverageCategoryMembership
+// options include CovarianceLinearRegression, LinearAlgebraLinearRegression, AverageCategoryMembership
+var model_type = 'AverageCategoryMembership'
 var bandit = banditoAPI(
     api_key_for_bandito,
     model_id,
@@ -65,6 +66,7 @@ var selected_action_index = await bandit.select(feature_vectors)
 
 // Return a reward
 var response = await bandit.train(
-        [feature_vectors[selected_action_index]], [map_headline_to_reward[feature_vectors[selected_action_index]]]
+        [feature_vectors[selected_action_index]], 
+        [map_headline_to_reward[feature_vectors[selected_action_index]]]
     )
 ```
