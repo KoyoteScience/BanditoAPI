@@ -1,9 +1,3 @@
-// model_types:
-// SGDRegressor = 'SGDRegressor'
-// LinearAlgebraLinearRegression = 'LinearAlgebraLinearRegression'
-// AverageCategoryMembership = 'AverageCategoryMembership'
-// CovarianceLinearRegression = 'CovarianceLinearRegression'
-
 export default class banditoAPI {
 
     toString() {
