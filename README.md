@@ -1,6 +1,6 @@
 # BanditoAPI
 
-This is the core javascript client-side API library for Bandito API (see http://www.banditoapi.com/code_snippet_example.html).
+This is the core javascript client-side API library for Bandito API (see http://www.banditoapi.com/code_snippet_example.html for a live demonstration).
 
 ## Example Usage
 
