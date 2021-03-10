@@ -47,6 +47,10 @@ var feature_vectors = []
 for (var headline of list_of_possible_headlines) {
     feature_vectors.push([headline])
 }
+var map_headline_to_reward = {
+    'Take the blue pill': 1,
+    'Take the red pill': 0,
+}
 var model_id = 'app_id=code_snippet_example'
 var model_type = 'AverageCategoryMembership', // options include CovarianceLinearRegression, LinearAlgebraLinearRegression, AverageCategoryMembership
 var bandit = banditoAPI(
@@ -61,6 +65,6 @@ var selected_action_index = await bandit.select(feature_vectors)
 
 // Return a reward
 var response = await bandit.train(
-        feature_vectors[selected_action_index], reward
+        [feature_vectors[selected_action_index]], [map_headline_to_reward[feature_vectors[selected_action_index]]]
     )
 ```
