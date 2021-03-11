@@ -312,7 +312,7 @@ The full payload from BanditoAPI as described below. In general, this payload is
 
 ### Return Payloads
 
-Both **train** and **pull** return the following payload:
+Both **train** and **pull** return the following payload, which is only needed for debugging or advanced usage.:
 
 ```javascript
 payload = {
