@@ -82,7 +82,7 @@ There are four models that can be used at any time with Bandito, identified by s
   * A linear regression stochastic gradient descent regressor. This is a great solution for applications that will see a lot of data (quickly reaching 1000 training rows) where it is beneficial to "forget" old data. It trains quickly on large numbers of features.
 * LinearAlgebraLinearRegression
   * A linear regression using the last 100 (this number is user-definable) training rows, and a core set of the 5 most-recently visited trainng rows for each category value. This is an excellent solution when only the most recently used data is needed. The core set of training is kept around since a user will often encounter category values that are eliminated by the model, and we don't want to forget these values.
-* CovarianceLinearRegression
+* CovarianceLinearRegression (default)
   * A linear regression using update rules on the covariance matrix. Extremely efficient for large numbers of training rows, but order complexity grows with N^2 where N is the number of features and category values. This model also does not "forget" old data.
 * AverageCategoryMembership
   * The simplest and easiest-to-debug ModelType, but also its most versatile. This is only useful for features that are entirely encoded by category values. Basically, the historical performance of each category value is averaged together. This model type learns extremely quickly and communicates easily with the user.
