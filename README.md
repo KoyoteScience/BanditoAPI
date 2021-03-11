@@ -178,7 +178,7 @@ By default, we assume that the output is a continuous floating point with no lim
 Invocation:
 
 ```javascript
-var bandit = banditoAPI(
+banit = banditoAPI(
      api_key=null,
         // API key for accessing bandito
      model_id=null,
