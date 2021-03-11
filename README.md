@@ -2,7 +2,7 @@
 
 This is the core javascript client-side API library for Bandito API (see http://www.banditoapi.com/code_snippet_example.html for a live demonstration and https://github.com/KoyoteScience/red-pill-blue-pill for its source code).
 
-## Example Usage
+## Example Usage in Javascript
 
 ### Headline Optimizer
 ```javascript
@@ -52,7 +52,6 @@ var map_headline_to_reward = {
     'Take the red pill': 0,
 }
 var model_id = 'app_id=code_snippet_example'
-// options include CovarianceLinearRegression, LinearAlgebraLinearRegression, AverageCategoryMembership
 var model_type = 'AverageCategoryMembership'
 var bandit = banditoAPI(
     api_key_for_bandito,
@@ -66,10 +65,77 @@ var selected_action_index = await bandit.select(feature_vectors)
 
 // Return a reward
 var response = await bandit.train(
-        [feature_vectors[selected_action_index]], 
-        [map_headline_to_reward[feature_vectors[selected_action_index]]]
-    )
+    [feature_vectors[selected_action_index]], 
+    [map_headline_to_reward[feature_vectors[selected_action_index]]]
+)
 ```
+
+## Example Usage in Python
+
+### Headline Optimizer
+```python
+
+// Initialize
+api_key_for_bandito = '<CONTACT INFO@KOYOTESCIENCE.COM FOR AN API_KEY>'
+headlines_to_consider = [
+    'Take the blue pill',
+    'Take the red pill',
+]
+bandit = new headlineOptimizer(
+    api_key_for_bandito, 
+    'app_id=code_snippet_example', 
+    headlines_to_consider
+)
+
+// Select a headline
+selected_headline = bandit.selectHeadline()
+
+// Return a reward
+response = bandit.trainMostRecentlySelectedHeadline(reward)
+```
+
+
+### Standard
+```python
+
+// Initialize
+api_key_for_bandito = '<CONTACT INFO@KOYOTESCIENCE.COM FOR AN API_KEY>'
+headlines_to_consider = [
+    'Take the blue pill',
+    'Take the red pill',
+]
+feature_metadata = [{
+    'name': 'text_to_choose',
+    'categorical_or_continuous': 'categorical',
+    'possible_values': headlines_to_consider
+}]
+feature_vectors = []
+for headline in list_of_possible_headlines:
+    feature_vectors.append([headline])
+
+map_headline_to_reward = {
+    'Take the blue pill': 1,
+    'Take the red pill': 0,
+}
+model_id = 'app_id=code_snippet_example'
+model_type = 'AverageCategoryMembership'
+bandit = banditoAPI(
+    api_key_for_bandito,
+    model_id,
+    feature_metadata,
+    model_type
+)
+
+// Select an action
+selected_action_index = bandit.select(feature_vectors)
+
+// Return a reward
+response = bandit.train(
+    [feature_vectors[selected_action_index]], 
+    [map_headline_to_reward[feature_vectors[selected_action_index]]]
+)
+```
+
 ## Reference
 
 ### Input Payloads
