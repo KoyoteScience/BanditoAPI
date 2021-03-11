@@ -72,10 +72,6 @@ var response = await bandit.train(
 ```
 ## Reference
 
-### banditoAPI
-
-**initialize**
-
 Invocation:
 
 ```javascript
@@ -103,7 +99,7 @@ Returns:
 
 banditoAPI class instance
 
-**restart()**
+### restart()
 
 Deletes training history of the given bandit and re-initializes all values.
 
@@ -117,7 +113,7 @@ Returns:
 
 null
 
-**select()**
+### select()
 
 Selects a feature vector from a given list according to the bandit.
 
@@ -138,7 +134,7 @@ Returns:
 
 Integer fo the index from feature_vectors that was selected.
 
-**select_with_automatic_restart()**
+### select_with_automatic_restart()
 
 Selects a feature vector from a given list according to the bandit, but also restarts the bandit during certain circumstanes:
 * When the given model_id has never been encountered before
@@ -161,7 +157,7 @@ Returns:
 
 Integer fo the index from feature_vectors that was selected.
 
-**pull**
+### pull()
 
 Invocation (same as s:
 
@@ -180,7 +176,7 @@ Returns:
 
 The full payload from BanditoAPI as described below. In general, this payload is only needed for debugging or advanced usage.
 
-**train**
+### train()
 
 ```javascript
 bandit.train(
@@ -192,6 +188,8 @@ bandit.train(
 ```
 
 The full payload from BanditoAPI as described below. In general, this payload is only needed for debugging or advanced usage.
+
+### Return Payloads
 
 Both **train** and **pull** return the following payload:
 
