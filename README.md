@@ -198,6 +198,8 @@ The full payload from BanditoAPI as described below. In general, this payload is
 
 ### train()
 
+Invocation:
+
 ```javascript
 bandit.train(
     feature_vectors,
@@ -206,6 +208,8 @@ bandit.train(
         // list of float output values to train on, can also be a single float containing one output value
 )
 ```
+
+Returns:
 
 The full payload from BanditoAPI as described below. In general, this payload is only needed for debugging or advanced usage.
 
