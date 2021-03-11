@@ -121,12 +121,18 @@ Invocation (same as pull, except that feature_vectors can be omitted if it was p
 
 ```javascript
 bandit.pull(
-    feature_vectors=null,  // a list of lists containing the feature vectors to be scored
-    model_type=null, //  one of ModelType available values
-    predict_on_all_models=false,  // it takes longer to run predictions on all models in the ensemble, but it can be useful for obtaining propensities and distributions of model parameters
-    model_index=null,  // should scoruing use a specific index in the probablistic ensemble?
-    deterministic=false, // should scoring occur using a probabilistic model or on a deterministic one?
-    attempt_restart=false // should an automatic restart occur when suggested by the API? (e.g., when the features change, or when an entry for the given model_id cannot be found)
+    feature_vectors=null,  
+        // a list of lists containing the feature vectors to be scored
+    model_type=null, 
+        // one of ModelType available values
+    predict_on_all_models=false,  
+        // it takes longer to run predictions on all models in the ensemble, but it can be useful for obtaining propensities and distributions of model parameters
+    model_index=null,  
+        // should scoruing use a specific index in the probablistic ensemble?
+    deterministic=false, 
+        // should scoring occur using a probabilistic model or on a deterministic one?
+    attempt_restart=false 
+        // should an automatic restart occur when suggested by the API? (e.g., when the features change, or when an entry for the given model_id cannot be found)
 )
 ```
 
@@ -144,12 +150,18 @@ Invocation (same as select):
 
 ```javascript
 bandit.pull(
-    feature_vectors=null,  // a list of lists containing the feature vectors to be scored
-    model_type=null, //  one of ModelType available values
-    predict_on_all_models=false,  // it takes longer to run predictions on all models in the ensemble, but it can be useful for obtaining propensities and distributions of model parameters
-    model_index=null,  // should scoruing use a specific index in the probablistic ensemble?
-    deterministic=false, // should scoring occur using a probabilistic model or on a deterministic one?
-    attempt_restart=false // should an automatic restart occur when suggested by the API? (e.g., when the features change, or when an entry for the given model_id cannot be found)
+    feature_vectors=null,  
+        // a list of lists containing the feature vectors to be scored
+    model_type=null, 
+        // one of ModelType available values
+    predict_on_all_models=false,  
+        // it takes longer to run predictions on all models in the ensemble, but it can be useful for obtaining propensities and distributions of model parameters
+    model_index=null,   
+        // should scoruing use a specific index in the probablistic ensemble?
+    deterministic=false, 
+        // should scoring occur using a probabilistic model or on a deterministic one?
+    attempt_restart=false 
+        // should an automatic restart occur when suggested by the API? (e.g., when the features change, or when an entry for the given model_id cannot be found)
 )
 ```
 
@@ -163,12 +175,18 @@ Invocation (same as s:
 
 ```javascript
 bandit.pull(
-    feature_vectors,  // a list of lists containing the feature vectors to be scored
-    model_type=null, //  one of ModelType available values
-    predict_on_all_models=false,  // it takes longer to run predictions on all models in the ensemble, but it can be useful for obtaining propensities and distributions of model parameters
-    model_index=null,  // should scoruing use a specific index in the probablistic ensemble?
-    deterministic=false, // should scoring occur using a probabilistic model or on a deterministic one?
-    attempt_restart=false // should an automatic restart occur when suggested by the API? (e.g., when the features change, or when an entry for the given model_id cannot be found)
+    feature_vectors,  
+        // a list of lists containing the feature vectors to be scored
+    model_type=null, 
+        // one of ModelType available values
+    predict_on_all_models=false,  
+        // it takes longer to run predictions on all models in the ensemble, but it can be useful for obtaining propensities and distributions of model parameters
+    model_index=null,  
+        // should scoruing use a specific index in the probablistic ensemble?
+    deterministic=false, 
+        // should scoring occur using a probabilistic model or on a deterministic one?
+    attempt_restart=false 
+        // should an automatic restart occur when suggested by the API? (e.g., when the features change, or when an entry for the given model_id cannot be found)
 )
 ```
 
