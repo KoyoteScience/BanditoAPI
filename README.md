@@ -98,68 +98,128 @@ bandit.pull(
 
 Returns: 
 
-The full payload from BanditoAPI, including the following fields. In general, these are only needed for debugging or advanced usage.
+The full payload from BanditoAPI as described elsewhere. In general, these are only needed for debugging or advanced usage.
+
+Both **train** and **pull** return the following payload:
 
 ```javascript
 payload = {
-    alias, // staging or prod
-    progress, // current training progress
-    statusCode, // "200"
-    headers, // headers for passing through CORS
-    store_updated_model_response, // response from DynamoDB when storing updated model
-    chosen_model_index, // the chosen model index from the probabilistic ensemble
+    alias, 
+        // staging or prod
+    progress, 
+        // current training progress
+    statusCode, 
+        // "200"
+    headers, 
+        // headers for passing through CORS
+    store_updated_model_response, 
+        // response from DynamoDB when storing updated model
+    chosen_model_index, 
+        // the chosen model index from the probabilistic ensemble
     number_of_updates_for_chosen_model, 
-    message, // "success" or "failure"
-    min_count_to_skip_unknown_score, // how many times we need to sample a category before using the data distribution
-    model_type_name, // one of ModelType allowed values
-    prediction, // list-of-lists of predictions from all models (None's given if predict_on_all_models is set to false
-    prediction_for_chosen_model, // list of prediction scores for the chosen probablistic model (or the deterministic model if deterministic is set to true)
-    deterministic_prediction, // list of prediction scores for hte deterministic model
-    chosen_action_index, // the chosen action index determined by the chosen model from the probabilistic ensemble (or the the deterministic model if deterministic is set to true)
-    chosen_feature_vector, // feature vector for the chosen_action_index
-    chosen_prediction_softmax, // softmax of the score for the chosen_action_index
-    number_of_updates, // how many times this bandit has been trained
-    did_we_update, // boolean for whether we have trained in this pull (should be false)
-    map_model_index_to_updates, // object mapping the model index in the probabilistic ensemble to the number of training rows it has received
-    ever_turn_off_training, // boolean for whether the passed feature vectors violated the feature_metadata
-    bandit_mode, // "restart", "train", or "pull"
-    model_parameters, // list-of-objects contain hyperparameters for each model in the probabilistic ensemble
-    model_coefficients, // list-of-list of coefficients for all models in the probabilistic ensemble
-    coefficients_for_chosen_model, // list of coefficients for the chosen model
-    model_intercepts, // list of intercepts for all models in the probabilistic ensemble (if linear regression type)
-    intercept_for_chosen_model, // float of intercept for chosen model (if linear regression type)
-    deterministic_model_parameters, // hyperparameters for the deterministic model
-    deterministic_model_coefficients, // list of coefficients for the deterministic model
-    deterministic_model_intercept, // float of intercept for the deterministic model (if linear regression type)
-    expanded_feature_names, // list of strings describing each feature element when categorical values are expanded
-    expanded_feature_names_detailed, // list of objects describing each feature element when categorical values are expanded
-    time_to_run_in_sec, // how long it took the job to run internally (not including network connections)
-    map_feature_index_to_possible_value_to_list_map_model_index_to_prior_counts, // object mapping each categorical value to a list with an entry for each member of the probabilistic ensemble that contains an integer for the number of training rows for the deterministic model
-    map_feature_index_to_possible_value_to_list_map_model_index_to_output_sums, // object mapping each categorical value to a list with an entry for each member of the probabilistic ensemble that contains the float sum of output values for training rows containing that categorical value
-    map_feature_index_to_possible_value_to_prior_counts_for_chosen_model, // object mapping each categorical value to number of training rows for the model chosen from the probabilistic ensemble
-    map_feature_index_to_possible_value_to_trailing_list_of_input_and_output_data,  // object mapping each categorical value to a trailing list of objects containing the input and output training vectors for the deterministic model
-    map_feature_index_to_possible_value_to_prior_counts, // object mapping each categorical value to the integer number of training rows with that categorical value given to the deterministic model
-    map_feature_index_to_possible_value_to_output_sums, // object mapping each categorical value to the float sum of output values for training rows with that categorical value given to the deterministic model
-    map_feature_index_to_possible_value_to_output_sum_squares, // object mapping each categorical value to the float sum of squared output values for training rows with that categorical value given to the deterministic model
-    map_feature_index_to_possible_value_to_prior_counts_trailing, // object mapping each categorical value to a list of integers for the index of training rows with that categorical value given to the deterministic model as returned by map_feature_index_to_possible_value_to_trailing_list_of_input_and_output_data
-    map_feature_index_to_possible_value_to_output_sums_trailing, // object mapping each categorical value to the float sum of output values for training rows with that categorical value given to the deterministic model, but only for the trailing training rows in map_feature_index_to_possible_value_to_trailing_list_of_input_and_output_data
-    map_feature_index_to_possible_value_to_output_sum_squares_trailing, // object mapping each categorical value to the float sum of squared output values for training rows with that categorical value given to the deterministic model, but only for the trailing training rows in map_feature_index_to_possible_value_to_trailing_list_of_input_and_output_data
-    map_feature_index_to_possible_value_to_output_sums_for_chosen_model,  // object mapping each categorical value to the float sum of output values for training rows with that categorical value given to model chosen from the probabilistic ensemble
-    map_feature_index_to_possible_value_to_output_sum_squares_for_chosen_model, // object mapping each categorical value to the float sum of squared output values for training rows with that categorical value given to model chosen from the probabilistic ensemble
-    map_feature_index_to_input_sums, // object mapping each continuous feature element to the float sum of input values for training rows with that categorical value given to deterministic model
-    map_feature_index_to_input_sum_squares, // object mapping each continuous feature element to the float sum of squared input values for training rows with that categorical value given to deterministic model
-    output_sum, // float for the sum of output values in the training data that has been given to the deterministic model
-    output_sum_squares, // float for the sum of squared output values in the training data that has been given to the deterministic model
-    trailing_list_of_output_values, // list for the output values in the training data that has been given to the deterministic model, but only for the trailing set of training data
-    trailing_list_of_feature_vectors, // list for the input feature vectors in the training data that has been given to the deterministic model, but only for the trailing set of training data
-    list_map_input_vector_index_to_min_prior_count, // list of number of training rows that have been given to the deterministic model
+        // integer number of training rows given to the model chosen from the probabilistic ensemble
+    message, 
+        // "success" or "failure"
+    min_count_to_skip_unknown_score, 
+        // how many times we need to sample a category before using the data distribution
+    model_type_name, 
+        // one of ModelType allowed values
+    prediction, 
+        // list-of-lists of predictions from all models (None's given if predict_on_all_models is set to false
+    prediction_for_chosen_model, 
+        // list of prediction scores for the chosen probablistic model (or the deterministic model if deterministic is set to true)
+    deterministic_prediction, 
+        // list of prediction scores for hte deterministic model
+    chosen_action_index, 
+        // the chosen action index determined by the chosen model from the probabilistic ensemble (or the the deterministic model if deterministic is set to true)
+    chosen_feature_vector, 
+        // feature vector for the chosen_action_index
+    chosen_prediction_softmax, 
+        // softmax of the score for the chosen_action_index
+    number_of_updates, 
+        // how many times this bandit has been trained
+    did_we_update, 
+        // boolean for whether we have trained in this pull (should be false)
+    map_model_index_to_updates, 
+        // object mapping the model index in the probabilistic ensemble to the number of training rows it has received
+    ever_turn_off_training, 
+        // boolean for whether the passed feature vectors violated the feature_metadata
+    bandit_mode, 
+        // "restart", "train", or "pull"
+    model_parameters, 
+        // list-of-objects contain hyperparameters for each model in the probabilistic ensemble
+    model_coefficients, 
+        // list-of-list of coefficients for all models in the probabilistic ensemble
+    coefficients_for_chosen_model, 
+        // list of coefficients for the chosen model
+    model_intercepts, 
+        // list of intercepts for all models in the probabilistic ensemble (if linear regression type)
+    intercept_for_chosen_model, 
+        // float of intercept for chosen model (if linear regression type)
+    deterministic_model_parameters, 
+        // hyperparameters for the deterministic model
+    deterministic_model_coefficients, 
+        // list of coefficients for the deterministic model
+    deterministic_model_intercept, 
+        // float of intercept for the deterministic model (if linear regression type)
+    expanded_feature_names, 
+        // list of strings describing each feature element when categorical values are expanded
+    expanded_feature_names_detailed, 
+        // list of objects describing each feature element when categorical values are expanded
+    time_to_run_in_sec, 
+        // how long it took the job to run internally (not including network connections)
+    map_feature_index_to_possible_value_to_list_map_model_index_to_prior_counts, 
+        // object mapping each categorical value to a list with an entry for each member of the probabilistic ensemble that contains an integer for the number of training rows for the deterministic model
+    map_feature_index_to_possible_value_to_list_map_model_index_to_output_sums, 
+        // object mapping each categorical value to a list with an entry for each member of the probabilistic ensemble that contains the float sum of output values for training rows containing that categorical value
+    map_feature_index_to_possible_value_to_prior_counts_for_chosen_model, 
+        // object mapping each categorical value to number of training rows for the model chosen from the probabilistic ensemble
+    map_feature_index_to_possible_value_to_trailing_list_of_input_and_output_data,  
+        // object mapping each categorical value to a trailing list of objects containing the input and output training vectors for the deterministic model
+    map_feature_index_to_possible_value_to_prior_counts, 
+        // object mapping each categorical value to the integer number of training rows with that categorical value given to the deterministic model
+    map_feature_index_to_possible_value_to_output_sums, 
+        // object mapping each categorical value to the float sum of output values for training rows with that categorical value given to the deterministic model
+    map_feature_index_to_possible_value_to_output_sum_squares, 
+        // object mapping each categorical value to the float sum of squared output values for training rows with that categorical value given to the deterministic model
+    map_feature_index_to_possible_value_to_prior_counts_trailing, 
+        // object mapping each categorical value to a list of integers for the index of training rows with that categorical value given to the deterministic model as returned by map_feature_index_to_possible_value_to_trailing_list_of_input_and_output_data
+    map_feature_index_to_possible_value_to_output_sums_trailing, 
+        // object mapping each categorical value to the float sum of output values for training rows with that categorical value given to the deterministic model, but only for the trailing training rows in map_feature_index_to_possible_value_to_trailing_list_of_input_and_output_data
+    map_feature_index_to_possible_value_to_output_sum_squares_trailing, 
+        // object mapping each categorical value to the float sum of squared output values for training rows with that categorical value given to the deterministic model, but only for the trailing training rows in map_feature_index_to_possible_value_to_trailing_list_of_input_and_output_data
+    map_feature_index_to_possible_value_to_output_sums_for_chosen_model,  
+        // object mapping each categorical value to the float sum of output values for training rows with that categorical value given to model chosen from the probabilistic ensemble
+    map_feature_index_to_possible_value_to_output_sum_squares_for_chosen_model, 
+        // object mapping each categorical value to the float sum of squared output values for training rows with that categorical value given to model chosen from the probabilistic ensemble
+    map_feature_index_to_input_sums, 
+        // object mapping each continuous feature element to the float sum of input values for training rows with that categorical value given to deterministic model
+    map_feature_index_to_input_sum_squares, 
+        // object mapping each continuous feature element to the float sum of squared input values for training rows with that categorical value given to deterministic model
+    output_sum, 
+        // float for the sum of output values in the training data that has been given to the deterministic model
+    output_sum_squares, 
+        // float for the sum of squared output values in the training data that has been given to the deterministic model
+    trailing_list_of_output_values, 
+        // list for the output values in the training data that has been given to the deterministic model, but only for the trailing set of training data
+    trailing_list_of_feature_vectors, 
+        // list for the input feature vectors in the training data that has been given to the deterministic model, but only for the trailing set of training data
+    list_map_input_vector_index_to_min_prior_count, 
+        // list mapping each input vector of minimum number of training rows that have been given to the deterministic model that share the same categorical values in the input vector
     list_map_input_vector_index_to_min_prior_count_for_chosen_model,
+        // list mapping each input vector to the minimum number of prior training rows given to the deterministic model containing any of the categorical values for the given input vector
     list_map_input_vector_index_to_feature_index_to_prior_counts,
+        // list of lists mapping the input vector index to a list mapping each entry in the input feature vector to the number of prior training rows given to the deterministic model containing the same categorical value
     list_map_input_vector_index_to_model_index_to_min_prior_count,
-    list_map_input_vector_index_to_model_index_to_whether_should_be_given_unknown_score,
+        // list of lists mapping the input vector index to a list mapping each model of the probabilistic ensemble to the minimum number of prior training rows given to the deterministic model that share the same categorical values in the input vector
+    list_map_input_vector_index_to_model_index_to_whether_should_be_given_unknown_score, 
+        // list of lists mapping the input vector index to a list of model indexes containing a boolean determined by whether the input vector has been flagged by that model to be explored (flagged for unknown)
     list_map_input_vector_index_to_whether_should_be_given_unknown_score,
+        // list mapping the input vector index to a boolean determined by whether the input vector has been flagged by the deterministic model to be explored (flagged for unknown)
     map_feature_index_to_possible_value_to_feature_index_to_possible_value_to_covariance,
+        // the covariance matrix, in object form
     map_model_index_to_trailing_list_index_to_count
+        // list of lists mapping the model index from the probabilistic ensemble to the index of the trailing rows in map_feature_index_to_possible_value_to_trailing_list_of_input_and_output_data to the number of times that training row was added to that model in the probabilistic ensemble
 }
 ```
 
