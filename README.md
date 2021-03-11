@@ -316,19 +316,3 @@ payload = {
 }
 ```
 
-**train**
-
-```javascript
-
-```
-
-**select**
-
-```javascript
-
-```
-**select_with_automatic_restart**
-
-```javascript
-
-```
