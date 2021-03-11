@@ -72,6 +72,8 @@ var response = await bandit.train(
 ```
 ## Reference
 
+### banditoAPI()
+
 Invocation:
 
 ```javascript
