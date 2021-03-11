@@ -154,63 +154,6 @@ class banditoAPI:
         )
         return self.most_recent_pull_response['chosen_action_index']
 
-        # map_input_vector_index_to_model_index_to_whether_should_be_given_unknown_score
-        #   I recently added this
-        # chosen_action_index
-        # chosen_feature_vector
-        # chosen_prediction_softmax
-        # number_of_updates_for_chosen_model
-        # score_for_unknown
-        # prediction 
-        #   1-D array, one entry for each feature vector, the entry is also a list, generally length one 
-        #   (unless predict on all models, then length 100)
-        # prediction_for_chosen_model
-        # deterministic_prediction 
-        #   1-D array, one entry for each feature vector
-        # number_of_updates 
-        #   deterministic
-        # number_of_updates_for_chosen_model
-        # map_model_index_to_updates
-        # model_coefficients 
-        #   list with Nones, except for the one model we chose
-        # coefficients_for_chosen_model
-        # model_intercepts 
-        #   list with Nones, except for the one model we chose
-        # intercept_for_chosen_model
-        # deterministic_model_intercept
-        # deterministic_model_coefficients
-        # expanded_feature_names 
-        #   names for each feature expanded by category and possible value
-        # expanded_feature_names_detailed
-        #   for each entry in expanded_feature_names, gives you orig_index, name, and possible_value
-        # time_to_run_in_sec
-        # map_feature_index_to_possible_value_to_model_index_to_prior_counts
-        #   huge! so I took this out of the return value, can add back in later if necessary
-        # map_feature_index_to_possible_value_to_prior_counts_for_chosen_model
-        # map_feature_index_to_possible_value_to_prior_counts
-        # map_feature_index_to_possible_value_to_output_sums
-        # map_feature_index_to_possible_value_to_output_sum_squares
-        # map_feature_index_to_possible_value_to_output_sums_for_chosen_model
-        # map_feature_index_to_possible_value_to_output_sum_squares_for_chosen_model
-        # map_feature_index_to_input_sums
-        #   empty! actually, that's by design, because it only gives results for continuous values
-        # map_feature_index_to_input_sum_squares
-        #   empty! actually, that's by design, because it only gives results for continuous values
-        # output_sum
-        #   zero! this is an actual bug that I fixed
-        # output_sum_squares
-        #   zero! this is an actual bug that I fixed
-        # trailing_list_of_output_values
-        # trailing_list_of_feature_vectors
-        # list_map_input_vector_index_to_min_prior_count
-        # list_map_input_vector_index_to_min_prior_count_for_chosen_model
-        # list_map_input_vector_index_to_feature_index_to_prior_counts
-        # list_map_input_vector_index_to_model_index_to_min_prior_count
-        # list_map_feature_index_to_possible_value_to_feature_index_to_possible_value_to_covariance
-        #   huge!
-        #   TODO: can I make this into an array, since all the info is in expanded_feature_names? 
-
-
 class headlineOptimizer(banditoAPI):
 
     def __init__(
