@@ -77,13 +77,64 @@ var response = await bandit.train(
 **restart()**
 
 Deletes training history of the given bandit and re-initializes all values.
+
+Invocation: 
+
 ```javascript
 bandit.restart()
 ```
 
+Returns: 
+
+null
+
+**select()**
+
+Selects a feature vector from a given list according to the bandit.
+
+Invocation (same as pull, except that feature_vectors can be omitted if it was passed during instantiation):
+
+```javascript
+bandit.pull(
+    feature_vectors=null,  // a list of lists containing the feature vectors to be scored
+    model_type=null, //  one of ModelType available values
+    predict_on_all_models=false,  // it takes longer to run predictions on all models in the ensemble, but it can be useful for obtaining propensities and distributions of model parameters
+    model_index=null,  // should scoruing use a specific index in the probablistic ensemble?
+    deterministic=false, // should scoring occur using a probabilistic model or on a deterministic one?
+    attempt_restart=false // should an automatic restart occur when suggested by the API? (e.g., when the features change, or when an entry for the given model_id cannot be found)
+)
+```
+
+Returns:
+
+Integer fo the index from feature_vectors that was selected.
+
+**select_with_automatic_restart()**
+
+Selects a feature vector from a given list according to the bandit, but also restarts the bandit during certain circumstanes:
+* When the given model_id has never been encountered before
+* When the feature_metadata or output_metadata has changed (thus invalidating the current bandit results)
+
+Invocation (same as select):
+
+```javascript
+bandit.pull(
+    feature_vectors=null,  // a list of lists containing the feature vectors to be scored
+    model_type=null, //  one of ModelType available values
+    predict_on_all_models=false,  // it takes longer to run predictions on all models in the ensemble, but it can be useful for obtaining propensities and distributions of model parameters
+    model_index=null,  // should scoruing use a specific index in the probablistic ensemble?
+    deterministic=false, // should scoring occur using a probabilistic model or on a deterministic one?
+    attempt_restart=false // should an automatic restart occur when suggested by the API? (e.g., when the features change, or when an entry for the given model_id cannot be found)
+)
+```
+
+Returns:
+
+Integer fo the index from feature_vectors that was selected.
+
 **pull**
 
-Invocation:
+Invocation (same as s:
 
 ```javascript
 bandit.pull(
@@ -98,7 +149,20 @@ bandit.pull(
 
 Returns: 
 
-The full payload from BanditoAPI as described elsewhere. In general, these are only needed for debugging or advanced usage.
+The full payload from BanditoAPI as described below. In general, this payload is only needed for debugging or advanced usage.
+
+**train**
+
+```javascript
+bandit.train(
+    feature_vectors,
+        // list-of-lists of feature vectors to train on, can also be a single list containing one feature vector
+    output_values
+        // list of float output values to train on, can also be a single float containing one output value
+)
+```
+
+The full payload from BanditoAPI as described below. In general, this payload is only needed for debugging or advanced usage.
 
 Both **train** and **pull** return the following payload:
 
