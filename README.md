@@ -74,6 +74,35 @@ var response = await bandit.train(
 
 ### banditoAPI
 
+**initialize**
+
+Invocation:
+
+```javascript
+var bandit = banditoAPI(
+     api_key=null,
+        // API key for accessing bandito
+     model_id=null,
+        // string identifying the unique model or bandit
+     feature_metadata=null,
+        // object containing metadata about the feature vectors (for more information, see below)
+     model_type='LinearAlgebraLinearRegression',
+        // string, one of         
+            // SGDRegressor
+            // LinearAlgebraLinearRegression
+            // AverageCategoryMembership
+            // CovarianceLinearRegression
+     predict_on_all_models=false,
+        // boolean for whether to run predictions on all models in the probabilistic ensemble (useful for debugging)
+     feature_vectors=null,
+        // a list of lists of feature vectors to always pull on, if you don't want to pass them in every pull
+)
+```
+
+Returns:
+
+banditoAPI class instance
+
 **restart()**
 
 Deletes training history of the given bandit and re-initializes all values.
