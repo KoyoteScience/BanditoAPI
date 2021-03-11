@@ -8,7 +8,7 @@ export default class banditoAPI {
                  api_key=null,
                  model_id=null,
                  feature_metadata=null,
-                 model_type='LinearAlgebraLinearRegression',
+                 model_type='CovarianceLinearRegression',
                  predict_on_all_models=false,
                  feature_vectors=null,
                  ) {
@@ -146,7 +146,7 @@ export default class banditoAPI {
     async train(feature_vectors, output_values) {
         var payload = {
             'model_id': this.model_id,
-            'model_type': {'name': 'SGDRegressor'},  // TODO: This currently just overwrites, and should be settable
+            'model_type': {'name': 'SGDRegressor'},  // This shouldn't change until we have more model types that require storing binaries
             'bandit_mode': 'train',
             'feature_metadata': this.feature_metadata,
             'feature_vectors': feature_vectors,
