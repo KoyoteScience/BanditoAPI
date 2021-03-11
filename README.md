@@ -1,6 +1,6 @@
 # BanditoAPI
 
-This is the core javascript client-side API library for Bandito API (see http://www.banditoapi.com/code_snippet_example.html for a live demonstration).
+This is the core javascript client-side API library for Bandito API (see http://www.banditoapi.com/code_snippet_example.html for a live demonstration and https://github.com/KoyoteScience/red-pill-blue-pill for its source code).
 
 ## Example Usage
 
