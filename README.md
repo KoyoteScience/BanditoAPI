@@ -435,12 +435,12 @@ payload = {
         // the covariance matrix, in object form
     map_model_index_to_trailing_list_index_to_count
         // list of lists mapping the model index from the probabilistic ensemble to the index of the trailing rows in map_feature_index_to_possible_value_to_trailing_list_of_input_and_output_data to the number of times that training row was added to that model in the probabilistic ensemble
-}
     covariance_matrix
         // covariance matrix of the input and output values
     moment_matrix
         // moment matrix of the input and output values, that is, given Z = np.hstack([X, y]), the moment matrix is Z.T @ Z (in numpy notation)
     residual_sum_squares
         // sum of squared residuals for the deterministic version of BayesianLinearRegression, which is always updated even when training on another model type
+}
 ```
 
