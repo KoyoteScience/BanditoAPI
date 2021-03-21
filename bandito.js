@@ -8,9 +8,10 @@ export default class banditoAPI {
         api_key = null,
         model_id = null,
         feature_metadata = null,
-        model_type = 'CovarianceLinearRegression',
+        model_type = 'MomentLinearRegression',
         predict_on_all_models = false,
         feature_vectors = null,
+        bandit_metadata = null
     ) {
         this.api_key = api_key
         this.url = 'https://akn4hgmvuc.execute-api.us-west-2.amazonaws.com/staging/'
@@ -24,6 +25,7 @@ export default class banditoAPI {
         this.most_recent_train_response = null
         this.most_recent_response = null
         this.progress = null
+        this.bandit_metadata = bandit_metadata
     }
 
     async restart() {
@@ -33,7 +35,8 @@ export default class banditoAPI {
             'model_type': {'name': this.model_type},
             'bandit_mode': 'restart',
             'predict_on_all_models': this.predict_on_all_models,
-            'feature_metadata': this.feature_metadata
+            'feature_metadata': this.feature_metadata,
+            'bandit_metadata': this.bandit_metadata
         }
 
         // Simple POST request with a JSON body using fetch
@@ -86,7 +89,9 @@ export default class banditoAPI {
             'predict_on_all_models': predict_on_all_models,
             'feature_metadata': this.feature_metadata,
             'feature_vectors': feature_vectors,
-            'model_index': model_index
+            'model_index': model_index,
+            'bandit_metadata': this.bandit_metadata,
+            'deterministic': deterministic
         }
 
         // Simple POST request with a JSON body using fetch
@@ -163,7 +168,8 @@ export default class banditoAPI {
             'feature_metadata': this.feature_metadata,
             'feature_vectors': feature_vectors,
             'output_values': output_values,
-            'timestamp_of_payload_creation': (new Date().getTime())
+            'timestamp_of_payload_creation': (new Date().getTime()),
+            'bandit_metadata': this.bandit_metadata
         }
 
         // Simple POST request with a JSON body using fetch
@@ -185,6 +191,7 @@ export default class banditoAPI {
             }
         );
 
+        debugger
         if (Object.keys(response).includes('body')) {
             response.body = JSON.parse(response.body)
         } else if (Object.keys(response).includes('alias')) {
@@ -222,7 +229,7 @@ export default class banditoAPI {
 
 export class headlineOptimizer extends banditoAPI {
 
-    constructor(api_key, model_id, list_of_possible_headlines) {
+    constructor(api_key, model_id, list_of_possible_headlines, bandit_metadata=null) {
 
         var feature_metadata = [{
             'name': 'text_to_choose',
@@ -235,9 +242,12 @@ export class headlineOptimizer extends banditoAPI {
             feature_vectors.push([headline])
         }
 
-        var bandit_metadata = {
+        var internal_bandit_metadata = {
             'model_id': model_id,
-            'model_type': 'AverageCategoryMembership', // options include CovarianceLinearRegression, LinearAlgebraLinearRegression, AverageCategoryMembership
+            'model_type': 'AverageCategoryMembership', 
+              // options include TrailingBayesianLinearRegression, 
+              //                 BayesianLinearRegression, 
+              //                 AverageCategoryMembership
             'feature_vectors': feature_vectors,
             'feature_metadata': feature_metadata,
             'predict_on_all_models': false
@@ -245,11 +255,12 @@ export class headlineOptimizer extends banditoAPI {
 
         super(
             api_key,
-            bandit_metadata.model_id,
-            bandit_metadata.feature_metadata,
-            bandit_metadata.model_type,
-            bandit_metadata.predict_on_all_models,
-            bandit_metadata.feature_vectors
+            internal_bandit_metadata.model_id,
+            internal_bandit_metadata.feature_metadata,
+            internal_bandit_metadata.model_type,
+            internal_bandit_metadata.predict_on_all_models,
+            internal_bandit_metadata.feature_vectors,
+            bandit_metadata
         )
         this.most_recently_selected_headline = null
 
