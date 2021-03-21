@@ -142,14 +142,17 @@ response = bandit.train(
 
 **ModelType**
 
-There are four models that can be used at any time with Bandito, identified by string. Each has its pro's and con's, outlined below:
+There are four models that can be used with Bandito, identified by string. When training, Bandito updates interval variables for the exact models BayesianLinearRegression, TrainingBayesianLinearRegression, and AverageCategoryMembership. This means that even if you train with one of our bootstrapped model types (SGDRegressor is currently supported), you can always compare those results to the results from any of our exact model types at any time. For pulling, each model type has its pro's and con's, outlined below:
 
+*Bootstrapped Models*
 * SGDRegressor
   * A linear regression stochastic gradient descent regressor. This is a great solution for applications that will see a lot of data (quickly reaching 1000 training rows) where it is beneficial to "forget" old data. It trains quickly on large numbers of features.
-* LinearAlgebraLinearRegression
-  * A linear regression using the last 100 (this number is user-definable) training rows, and a core set of the 5 most-recently visited trainng rows for each category value. This is an excellent solution when only the most recently used data is needed. The core set of training is kept around since a user will often encounter category values that are eliminated by the model, and we don't want to forget these values.
-* CovarianceLinearRegression (default)
-  * A linear regression using update rules on the covariance matrix. Extremely efficient for large numbers of training rows, but order complexity grows with N^2 where N is the number of features and category values. This model also does not "forget" old data.
+
+*Exact Models*
+* TrailingBayesianLinearRegression
+  * A Bayesian linear regression with ridge regularization constant set to 1e-6, using the last 100 (this number is user-definable) training rows, and a core set of the 5 most-recently visited trainng rows for each category value. This is an excellent solution when only the most recently used data is needed, but order complexity grows with N^2 where N is the number of continuous eatures and category values. Note that the core set of training is kept around since a user will often encounter category values that are eliminated by the model, and we don't want to forget these values.
+* BayesianLinearRegression (default)
+  * A Bayesian linear regression with ridge regularization constant set to 1e-6. Extremely efficient for large numbers of training rows, but order complexity grows with N^2 where N is the number of continuous eatures and category values. This model also does not "forget" old data.
 * AverageCategoryMembership
   * The simplest and easiest-to-debug ModelType, but also its most versatile. This is only useful for features that are entirely encoded by category values. Basically, the historical performance of each category value is averaged together. This model type learns extremely quickly and communicates easily with the user.
 
@@ -433,5 +436,11 @@ payload = {
     map_model_index_to_trailing_list_index_to_count
         // list of lists mapping the model index from the probabilistic ensemble to the index of the trailing rows in map_feature_index_to_possible_value_to_trailing_list_of_input_and_output_data to the number of times that training row was added to that model in the probabilistic ensemble
 }
+    covariance_matrix
+        // covariance matrix of the input and output values
+    moment_matrix
+        // moment matrix of the input and output values, that is, given Z = np.hstack([X, y]), the moment matrix is Z.T @ Z (in numpy notation)
+    residual_sum_squares
+        // sum of squared residuals for the deterministic version of BayesianLinearRegression, which is always updated even when training on another model type
 ```
 
