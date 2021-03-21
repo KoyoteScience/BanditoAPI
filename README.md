@@ -140,7 +140,7 @@ response = bandit.train(
 
 ### Input Payloads
 
-**ModelType**
+**Model Type**
 
 There are four models that can be used with Bandito, identified by string. When training, Bandito updates interval variables for the exact models BayesianLinearRegression, TrainingBayesianLinearRegression, and AverageCategoryMembership. This means that even if you train with one of our bootstrapped model types (SGDRegressor is currently supported), you can always compare those results to the results from any of our exact model types at any time. For pulling, each model type has its pro's and con's, outlined below:
 
