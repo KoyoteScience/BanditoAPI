@@ -3,18 +3,15 @@ import requests
 import json
 import time
 
-
-# Note that Cognito ended up signing me in to bandito.api with this URL: https://www.banditoapi.com/?code=3ecbc40e-a82a-43da-a89b-db7a79fe66f6
-
 class ModelType(Enum):
 
     def __str__(self):
         return self.value
 
     SGDRegressor = 'SGDRegressor'
-    LinearAlgebraLinearRegression = 'LinearAlgebraLinearRegression'
+    BayesianLinearRegression = 'BayesianLinearRegression'
+    TrailingBayesianLinearRegression = 'TrailingBayesianLinearRegression'
     AverageCategoryMembership = 'AverageCategoryMembership'
-    CovarianceLinearRegression = 'CovarianceLinearRegression'  # note that this model has no bootstrap implemented
 
 
 class banditoAPI:
@@ -29,12 +26,12 @@ class banditoAPI:
                  api_key=None,
                  model_id=None,
                  feature_metadata=None,
-                 model_type='CovarianceLinearRegression',
+                 model_type='BayesianLinearRegression',
                  feature_vectors=None,
                  predict_on_all_models=False
                  ):
         self.api_key = api_key
-        self.url = 'https://akn4hgmvuc.execute-api.us-west-2.amazonaws.com/prod/'
+        self.url = 'https://akn4hgmvuc.execute-api.us-west-2.amazonaws.com/staging/'
         self.model_id = model_id
         self.feature_metadata = feature_metadata
         self.model_type = ModelType[model_type]
