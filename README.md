@@ -150,11 +150,11 @@ There are four models that can be used with Bandito, identified by string. When 
 
 *Exact Models*
 * TrailingBayesianLinearRegression
-  * A Bayesian linear regression with ridge regularization constant set to 1e-6, using the last 100 (this number is user-definable) training rows, and a core set of the 5 most-recently visited trainng rows for each category value. This is an excellent solution when only the most recently used data is needed, but order complexity grows with N^2 where N is the number of continuous eatures and category values. Note that the core set of training is kept around since a user will often encounter category values that are eliminated by the model, and we don't want to forget these values.
+  * A Bayesian linear regression with ridge regularization constant set to 1e-6, using the last N training rows, where N is set by the user (default N=100), and a core set of the M most-recently visited trainng rows for each category value, where M is also set by the user (default M=5). This is an excellent solution when only the most recently used data is needed. Note that the core set of training is kept around since a user will often encounter category values that are eliminated by the model, and we don't want to forget these values.
 * BayesianLinearRegression (default)
-  * A Bayesian linear regression with ridge regularization constant set to 1e-6. Extremely efficient for large numbers of training rows, but order complexity grows with N^2 where N is the number of continuous eatures and category values. This model also does not "forget" old data.
+  * A Bayesian linear regression with ridge regularization constant set to 1e-6. Extremely efficient for large numbers of training rows, but order complexity grows with N^2 where N is the number of continuous eatures and category values. This model does not "forget" old data.
 * AverageCategoryMembership
-  * The simplest and easiest-to-debug ModelType, but also its most versatile. This is only useful for features that are entirely encoded by category values. Basically, the historical performance of each category value is averaged together. This model type learns extremely quickly and communicates easily with the user.
+  * The simplest and easiest-to-debug model type, but also extremely versatile. This is only useful for features that are entirely encoded by category values. Basically, the historical performance of each category value is averaged together. This model type learns extremely quickly and communicates easily with the user, and in the case of one categorical feature, is equivalent to a "model free" bandit in the literature.
 
 **Feature Metadata**
 
