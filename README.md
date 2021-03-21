@@ -150,7 +150,7 @@ There are four models that can be used with Bandito, identified by string. When 
 
 *Exact Models*
 * BayesianLinearRegression (default)
-  * A Bayesian linear regression with ridge regularization constant set to 1e-6. Extremely efficient for large numbers of training rows, but note that order complexity and storage grow with N^2 where N is the number of continuous eatures and category values. This model does not "forget" old data.
+  * A Bayesian linear regression with ridge regularization constant set to 1e-6. Extremely efficient for large numbers of training rows, but note that each update requires an order complexity of N^3 and storage N^2, where N is the number of continuous eatures and category values, so it is not suitable to problems with very large numbers of features (generally, where N^3 >> L where L is the number of training rows). This model does not "forget" old data.
 * TrailingBayesianLinearRegression
   * A Bayesian linear regression with ridge regularization constant set to 1e-6, but only using the last N training rows, where N is set by the user (default N=100), along with a core set of the M most-recently visited trainng rows for each category value, where M is also set by the user (default M=5). This is an excellent solution when only the most recently used data is needed, or when you see noticeable drift in your data. Note that the core set of training is kept around since a user will often discount certain category values early on, and that information owuld otherwise be eliminated when cutting off the old data.
 * AverageCategoryMembership
