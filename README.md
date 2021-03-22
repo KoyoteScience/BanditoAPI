@@ -149,7 +149,7 @@ There are four models that can be used with Bandito, identified by string. When 
   * A linear regression stochastic gradient descent regressor. This is a great solution for applications that will see a lot of data (quickly reaching 1000 training rows) where it is beneficial to "forget" old data. It trains quickly on large numbers of features.
 
 *Exact Models*
-* BayesianLinearRegression (default)
+* BayesianLinearRegression (default, see https://github.com/KoyoteScience/BayesianLinearRegressor for details of its implementation)
   * A Bayesian linear regression with ridge regularization constant set to 1e-6. Extremely efficient for large numbers of training rows, but note that each update requires an order complexity of N^3 and storage N^2, where N is the number of continuous eatures and category values, so it is not suitable to problems with very large numbers of features (generally, where N^3 >> L where L is the number of training rows). This model does not "forget" old data.
 * TrailingBayesianLinearRegression
   * A Bayesian linear regression with ridge regularization constant set to 1e-6, but only using the last N training rows, where N is set by the user (default N=100), along with a core set of the M most-recently visited trainng rows for each category value, where M is also set by the user (default M=5). This is an excellent solution when only the most recently used data is needed, or when you see noticeable drift in your data. Note that the core set of training is kept around since a user will often discount certain category values early on, and that information owuld otherwise be eliminated when cutting off the old data.
