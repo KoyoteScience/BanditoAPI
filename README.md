@@ -4,6 +4,29 @@ This is the core javascript client-side API library for Bandito API (see http://
 
 ## Example Usage in Javascript
 
+### Slideshow Optimizer
+```javascript
+
+// Initialize
+var api_key_for_bandito = '<CONTACT INFO@KOYOTESCIENCE.COM FOR AN API_KEY>'
+var slides_to_consider = [
+    'Slide 1', 'Slide 2', 'Slide 3', 'Slide 4', 'Slide 5'
+]
+var bandit = new slideshowOptimizer(
+    api_key_for_bandito, 
+    'app_id=code_snippet_example', 
+    slides_to_consider
+)
+
+// Sort the slides
+var slides_in_order = await bandit.sortSlides()
+
+// Return a reward
+var response = await bandit.bandit.trainMostRecentlySelectedSlide(
+        selected_slide
+    )
+```
+
 ### Headline Optimizer
 ```javascript
 
