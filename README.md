@@ -23,7 +23,7 @@ var slides_in_order = await bandit.sortSlides()
 
 // Return a reward
 var response = await bandit.bandit.trainMostRecentlySelectedSlide(
-        selected_slide
+        selected_slide // or null
     )
 ```
 
