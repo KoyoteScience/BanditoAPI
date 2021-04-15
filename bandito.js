@@ -26,6 +26,9 @@ export default class banditoAPI {
         this.most_recent_response = null
         this.progress = null
         this.bandit_metadata = bandit_metadata
+        this.most_recently_ranked_feature_vectors = null
+        this.most_recently_pulled_prediction_scores = null
+        this.most_recently_pulled_feature_vectors = null
     }
 
     async restart() {
@@ -153,9 +156,27 @@ export default class banditoAPI {
             response.body['intercept_for_chosen_model'] = response.body['deterministic_model_intercept']
         }
 
+        // get feature_vector sorted from highest prediction to lowest
+        var predictions_with_unknown_scores_given_random_large_values = response.body.prediction_for_chosen_model.slice()
+        for (prediction_value of predictions_with_unknown_scores_given_random_large_values) {
+            if (prediction_value == null) {
+                // give it a random value that is at least as large as the largest numerical value
+                prediction_value = Math.random() + Math.max(...response.body.prediction_for_chosen_model) + 1
+            }
+        }
+        sorted_feature_vectors = feature_vectors.slice()
+        sorted_feature_vectors.sort(function(b, a) {
+          return predictions_with_unknown_scores_given_random_large_values.indexOf(a) - 
+              predictions_with_unknown_scores_given_random_large_values.indexOf(b);
+        });
+        
         this.most_recent_pull_response = response.body
         this.most_recent_response = response.body
         this.progress = response.body.progress
+        this.most_recently_ranked_feature_vectors = sorted_feature_vectors
+        this.most_recently_pulled_prediction_scores = response.body.prediction_for_chosen_model
+        this.most_recently_pulled_feature_vectors = feature_vectors
+        
         response.body.success = true
         return response.body
     }
@@ -191,7 +212,6 @@ export default class banditoAPI {
             }
         );
 
-        debugger
         if (Object.keys(response).includes('body')) {
             response.body = JSON.parse(response.body)
         } else if (Object.keys(response).includes('alias')) {
@@ -208,6 +228,18 @@ export default class banditoAPI {
         return response.body
     }
 
+    async rank(feature_vectors = null, model_type = null, predict_on_all_models = false, model_index = null, deterministic = false, attempt_restart = false) {
+        if (feature_vectors == null || feature_vectors == undefined) {
+            feature_vectors = this.feature_vectors
+        }
+        pull_reponse = await this.pull(feature_vectors, model_type, predict_on_all_models, model_index, deterministic, attempt_restart)
+        return this.most_recently_ranked_feature_vectors
+    }
+    
+    async rank_with_automatic_restart(feature_vectors = null, model_type = null, predict_on_all_models = false, model_index = null, deterministic = false) {
+        return await this.rank(feature_vectors, model_type, predict_on_all_models, model_index, deterministic, true)
+    } 
+    
     async select(feature_vectors = null, model_type = null, predict_on_all_models = false, model_index = null, deterministic = false, attempt_restart = false) {
         if (feature_vectors == null || feature_vectors == undefined) {
             feature_vectors = this.feature_vectors
@@ -217,12 +249,7 @@ export default class banditoAPI {
     }
 
     async select_with_automatic_restart(feature_vectors = null, model_type = null, predict_on_all_models = false, model_index = null, deterministic = false) {
-        if (feature_vectors == null || feature_vectors == undefined) {
-            feature_vectors = this.feature_vectors
-        }
-        var attempt_restart = true
-        await this.pull(feature_vectors, model_type, predict_on_all_models, model_index, deterministic, attempt_restart)
-        return this.most_recent_pull_response['chosen_action_index']
+        return await this.select(feature_vectors, model_type, predict_on_all_models, model_index, deterministic, true)
     }
 }
 
@@ -278,4 +305,66 @@ export class headlineOptimizer extends banditoAPI {
     async trainMostRecentlySelectedHeadline(reward) {
         return this.train([this.most_recently_selected_headline], [reward])
     }
+}
+
+
+
+export class slideshowOptimizer extends banditoAPI {
+
+    constructor(api_key, model_id, list_of_possible_slides, bandit_metadata = null) {
+
+        var feature_metadata = [{
+            'name': 'slide_name',
+            'categorical_or_continuous': 'categorical',
+            'possible_values': list_of_possible_slides
+        }]
+
+        var feature_vectors = []
+        for (var slide of list_of_possible_slides) {
+            feature_vectors.push([slide])
+        }
+
+        var internal_bandit_metadata = {
+            'model_id': model_id,
+            'model_type': 'AverageCategoryMembership',
+            'feature_vectors': feature_vectors,
+            'feature_metadata': feature_metadata,
+            'predict_on_all_models': false
+        }
+
+        super(
+            api_key,
+            internal_bandit_metadata.model_id,
+            internal_bandit_metadata.feature_metadata,
+            internal_bandit_metadata.model_type,
+            internal_bandit_metadata.predict_on_all_models,
+            internal_bandit_metadata.feature_vectors,
+            bandit_metadata
+        )
+        this.most_recently_selected_headline = null
+
+    }
+
+    async sortSlides() {
+        await this.rank_with_automatic_restart(
+            this.feature_vectors,
+            this.model_type
+        )
+        return
+    }
+
+    async trainSelectedSlide(slide_name) {
+        return this.train([slide_name], 1)
+    }
+
+    async trainClickthrough(slide_name) {
+        var first_slide_shown = this.most_recently_ranked_feature_vectors[0]
+        return this.train([first_slide_shown], 1)
+    }
+
+    async trainFailure(slide_name) {
+        var first_slide_shown = this.most_recently_ranked_feature_vectors[0]
+        return this.train([first_slide_shown], 1)
+    }
+
 }
