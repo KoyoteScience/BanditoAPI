@@ -141,9 +141,9 @@ action_feature_metadata = [{
 output_metadata = {
     'linear_logistic_or_categorical': 'logistic'
 }
-feature_vectors = []
+action_feature_vectors = []
 for headline in list_of_possible_headlines:
-    feature_vectors.append([headline])
+    action_feature_vectors.append([headline])
 
 map_headline_to_reward = {
     'Take the blue pill': 1,
@@ -164,7 +164,7 @@ selected_action_index = bandit.select(feature_vectors)
 
 // Return a reward
 response = bandit.train(
-    [feature_vectors[selected_action_index]], 
+    [action_feature_vectors[selected_action_index]],
     [map_headline_to_reward[feature_vectors[selected_action_index]]]
 )
 ```
