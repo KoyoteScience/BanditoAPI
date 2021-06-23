@@ -1,370 +1,262 @@
-export default class banditoAPI {
+from enum import Enum
+import requests
+import json
+import time
 
-    toString() {
-        return 'banditoAPI instance with model_id: ' + this.model_id
-    }
+# Note that Cognito ended up signing me in to bandito.api with this URL: https://www.banditoapi.com/?code=3ecbc40e-a82a-43da-a89b-db7a79fe66f6
 
-    constructor(
-        api_key = null,
-        model_id = null,
-        feature_metadata = null,
-        model_type = 'MomentLinearRegression',
-        predict_on_all_models = false,
-        feature_vectors = null,
-        bandit_metadata = null
-    ) {
-        this.api_key = api_key
-        this.url = 'https://akn4hgmvuc.execute-api.us-west-2.amazonaws.com/staging/'
-        this.model_id = model_id
-        this.feature_metadata = feature_metadata
-        this.model_type = model_type
-        this.predict_on_all_models = predict_on_all_models
-        this.feature_vectors = feature_vectors
-        this.most_recent_restart_response = null
-        this.most_recent_pull_response = null
-        this.most_recent_train_response = null
-        this.most_recent_response = null
-        this.progress = null
-        this.bandit_metadata = bandit_metadata
-        this.most_recently_ranked_feature_vectors = null
-        this.most_recently_pulled_prediction_scores = null
-        this.most_recently_pulled_feature_vectors = null
-    }
+class ModelType(Enum):
 
-    async restart() {
+    def __str__(self):
+        return self.value
 
-        var payload = {
-            'model_id': this.model_id,
-            'model_type': {'name': this.model_type},
-            'bandit_mode': 'restart',
-            'predict_on_all_models': this.predict_on_all_models,
-            'feature_metadata': this.feature_metadata,
-            'bandit_metadata': this.bandit_metadata
-        }
+    SGDRegressor = 'SGDRegressor'
+    BayesLinearRegressor = 'BayesLinearRegressor'
+    TrailingBayesLinearRegressor = 'TrailingBayesLinearRegressor'
+    EmpiricalRegressor = 'EmpiricalRegressor'
 
-        // Simple POST request with a JSON body using fetch
-        var requestOptions = {
-            method: 'POST',
-            headers: {
-                'x-api-key': this.api_key
-            },
-            body: JSON.stringify({
-                payload: payload
-            })
-        };
 
-        const response = await fetch(this.url, requestOptions).then(val => {
-            return val.json()
-        }).catch(
-            err => {
-                return {'errorMessage': 'Failure during fetch in javascript', err: err}
+class banditoAPI:
+
+    def __str__(self):
+        return f'banditoAPI instance with model_id: "{self.model_id}"'
+
+    def __repr__(self):
+        return str(self)
+
+    def __init__(self,
+                 api_key=None,
+                 model_id=None,
+                 action_feature_metadata=None,
+                 context_feature_metadata=None,
+                 output_metadata=None,
+                 model_type_name='BayesLinearRegressor',
+                 action_feature_vectors=None,
+                 predict_on_all_models=False,
+                 trailing_list_length=None,
+                 coreset_trailing_list_length=None,
+                 should_we_return_complete_payload=False
+                 ):
+        if action_feature_metadata is None:
+            action_feature_metadata = []
+        if context_feature_metadata is None:
+            context_feature_metadata = []
+        if context_feature_metadata is None:
+            context_feature_metadata = {
+                'linear_logistic_or_categorical': 'linear'
             }
-        );
+        self.api_key = api_key
+        self.url = 'https://akn4hgmvuc.execute-api.us-west-2.amazonaws.com/staging/'
+        self.model_id = model_id
+        self.action_feature_metadata = action_feature_metadata
+        self.context_feature_metadata = context_feature_metadata
+        self.output_metadata = output_metadata
+        self.model_type_name = model_type_name
+        self.predict_on_all_models = predict_on_all_models
+        self.action_feature_vectors = action_feature_vectors
+        self.most_recent_restart_response = None
+        self.most_recent_pull_response = None
+        self.most_recent_train_response = None
+        self.most_recent_response = None
+        self.trailing_list_length = trailing_list_length
+        self.coreset_trailing_list_length = coreset_trailing_list_length
+        self.should_we_return_complete_payload = should_we_return_complete_payload
 
-        if (Object.keys(response).includes('body')) {
-            response.body = JSON.parse(response.body)
-        } else if (Object.keys(response).includes('alias')) {
-            response.body = {...response}
-        } else {
-            debugger
-            response.body.success = false
-            return response.body
+    def restart(self):
+        payload = {
+            'model_id': self.model_id,
+            'model_type_name': self.model_type_name,
+            'bandit_mode': 'restart',
+            'predict_on_all_models': self.predict_on_all_models,
+            'action_feature_metadata': self.action_feature_metadata,
+            'context_feature_metadata': self.context_feature_metadata,
+            'output_metadata': self.output_metadata,
+            'trailing_list_length': self.trailing_list_length,
+            'coreset_trailing_list_length': self.coreset_trailing_list_length
         }
+        r = requests.post(
+            self.url,
+            data=json.dumps({'payload': payload}),
+            headers={
+                'x-api-key': self.api_key
+            }
+        )
+        r_json = r.json()
+        self.most_recent_restart_response = r_json
+        self.most_recent_response = r_json
+        return r_json
 
-        this.most_recent_train_response = response.body
-        this.most_recent_response = response.body
-        response.body.success = true
-        return response.body
-    }
+    def pull(
+            self,
+            action_feature_vectors,
+            context_feature_vector=None,
+            model_type_name=None,
+            predict_on_all_models=False,
+            model_index=None,
+            deterministic=False,
+            should_we_return_complete_payload=None
+    ):
 
-    async pull(feature_vectors, model_type = null, predict_on_all_models = false, model_index = null, deterministic = false, attempt_restart = false) {
+        if context_feature_vector is None:
+            context_feature_vector = []
 
-        if (model_type == null) {
-            var model_type_dict = {'name': this.model_type}
-        } else {
-            var model_type_dict = {'name': model_type}
-        }
+        if model_type_name is None:
+            model_type_name = str(self.model_type_name)
+        else:
+            model_type_name = str(model_type_name)
 
-        var payload = {
-            'model_id': this.model_id,
-            'model_type': model_type_dict,
+        if should_we_return_complete_payload is None:
+            should_we_return_complete_payload = self.should_we_return_complete_payload
+
+        payload = {
+            'model_id': self.model_id,
+            'model_type_name': model_type_name,
             'bandit_mode': 'pull',
             'predict_on_all_models': predict_on_all_models,
-            'feature_metadata': this.feature_metadata,
-            'feature_vectors': feature_vectors,
+            'action_feature_metadata': self.action_feature_metadata,
+            'context_feature_metadata': self.context_feature_metadata,
+            'output_metadata': self.output_metadata,
+            'action_feature_vectors': action_feature_vectors,
+            'context_feature_vector': context_feature_vector,
             'model_index': model_index,
-            'bandit_metadata': this.bandit_metadata,
-            'deterministic': deterministic
+            'trailing_list_length': self.trailing_list_length,
+            'coreset_trailing_list_length': self.coreset_trailing_list_length,
+            'should_we_return_complete_payload': should_we_return_complete_payload
         }
-
-        // Simple POST request with a JSON body using fetch
-        var requestOptions = {
-            method: 'POST',
-            headers: {
-                'x-api-key': this.api_key
-            },
-            body: JSON.stringify({
-                payload: payload
-            })
-        };
-
-        var response = await fetch(this.url, requestOptions).then(val => {
-            return val.json()
-        }).catch(
-            err => {
-                return {'errorMessage': 'Failure during fetch in javascript'}
+        r = requests.post(
+            self.url,
+            data=json.dumps({'payload': payload}),
+            headers={
+                'x-api-key': self.api_key
             }
-        );
+        )
+        r_json = r.json()
 
-        if (Object.keys(response).includes('body')) {
-            response.body = JSON.parse(response.body)
-        } else if (Object.keys(response).includes('alias')) {
-            response.body = {...response}
-        } else {
-            if (attempt_restart && Object.keys(response).includes('errorMessage') && response.errorMessage.includes("We recommend a restart")) {
+        if deterministic:
+            try:
+                r_json['prediction'] = r_json['deterministic_prediction']
+                r_json['coefficients_for_chosen_model'] = r_json['deterministic_model_coefficients']
+                r_json['intercept_for_chosen_model'] = r_json['deterministic_model_intercept']
+            except:
+                pass
 
-                var restart_resonse = await this.restart()
-                var time1 = Math.round(new Date().getTime())
-                var response = await fetch(this.url, requestOptions).then(val => {
-                    return val.json()
-                }).catch(
-                    err => {
-                        return {'errorMessage': 'Failure during fetch in javascript'}
-                    }
-                );
+        self.most_recent_pull_response = r_json
+        self.most_recent_response = r_json
+        return r_json
 
-                if (Object.keys(response).includes('body')) {
-                    response.body = JSON.parse(response.body)
-                } else if (Object.keys(response).includes('alias')) {
-                    response.body = {...response}
-                } else {
-                    response.body = {}
-                    response.body.success = false
-                    return response.body
-                }
-            } else {
-                debugger
-                response.body.success = false
-                return response.body
-            }
-        }
+    def train(
+            self,
+            action_feature_vector,
+            output_value,
+            context_feature_vector=None,
+            weights=None,
+            should_we_return_complete_payload=None
+    ):
 
+        if context_feature_vector is None:
+            context_feature_vector = []
 
-        if (deterministic) {
-            response.body['prediction_for_chosen_model'] = response.body['deterministic_prediction']
-            response.body['coefficients_for_chosen_model'] = response.body['deterministic_model_coefficients']
-            response.body['intercept_for_chosen_model'] = response.body['deterministic_model_intercept']
-        }
+        if should_we_return_complete_payload is None:
+            should_we_return_complete_payload = self.should_we_return_complete_payload
 
-        // get feature_vector sorted from highest prediction to lowest
-        var predictions_with_unknown_scores_given_random_large_values = response.body.prediction_for_chosen_model.slice()
-        for (prediction_value of predictions_with_unknown_scores_given_random_large_values) {
-            if (prediction_value == null) {
-                // give it a random value that is at least as large as the largest numerical value
-                prediction_value = Math.random() + Math.max(...response.body.prediction_for_chosen_model) + 1
-            }
-        }
-        sorted_feature_vectors = feature_vectors.slice()
-        sorted_feature_vectors.sort(function(b, a) {
-          return predictions_with_unknown_scores_given_random_large_values.indexOf(a) - 
-              predictions_with_unknown_scores_given_random_large_values.indexOf(b);
-        });
-        
-        this.most_recent_pull_response = response.body
-        this.most_recent_response = response.body
-        this.progress = response.body.progress
-        this.most_recently_ranked_feature_vectors = sorted_feature_vectors
-        this.most_recently_pulled_prediction_scores = response.body.prediction_for_chosen_model
-        this.most_recently_pulled_feature_vectors = feature_vectors
-        
-        response.body.success = true
-        return response.body
-    }
-
-    async train(feature_vectors, output_values) {
-        var payload = {
-            'model_id': this.model_id,
-            'model_type': {'name': 'SGDRegressor'},  // TODO: This currently just overwrites, and should be settable
+        payload = {
+            'model_id': self.model_id,
+            'model_type_name': 'SGDRegressor',  # TODO: This currently just overwrites, and should be settable
             'bandit_mode': 'train',
-            'feature_metadata': this.feature_metadata,
-            'feature_vectors': feature_vectors,
-            'output_values': output_values,
-            'timestamp_of_payload_creation': (new Date().getTime()),
-            'bandit_metadata': this.bandit_metadata
+            'action_feature_metadata': self.action_feature_metadata,
+            'context_feature_metadata': self.context_feature_metadata,
+            'output_metadata': self.output_metadata,
+            'action_feature_vectors': [action_feature_vector],
+            'output_value': output_value,
+            'context_feature_vector': context_feature_vector,
+            'timestamp_of_payload_creation': time.time() * 1000,
+            # to line up with javascript which returns milliseconds
+            'trailing_list_length': self.trailing_list_length,
+            'coreset_trailing_list_length': self.coreset_trailing_list_length,
+            'should_we_return_complete_payload': should_we_return_complete_payload
         }
-
-        // Simple POST request with a JSON body using fetch
-        var requestOptions = {
-            method: 'POST',
-            headers: {
-                'x-api-key': this.api_key
-            },
-            body: JSON.stringify({
-                payload: payload
-            })
-        };
-
-        const response = await fetch(this.url, requestOptions).then(val => {
-            return val.json()
-        }).catch(
-            err => {
-                return {'errorMessage': 'Failure during fetch in javascript'}
+        r = requests.post(
+            self.url,
+            data=json.dumps({'payload': payload}),
+            headers={
+                'x-api-key': self.api_key
             }
-        );
+        )
+        r_json = r.json()
+        self.most_recent_train_response = r_json
+        self.most_recent_response = r_json
+        return r_json
 
-        if (Object.keys(response).includes('body')) {
-            response.body = JSON.parse(response.body)
-        } else if (Object.keys(response).includes('alias')) {
-            response.body = {...response}
-        } else {
-            response.body.success = true
-            response.body
-        }
-
-        this.most_recent_train_response = response.body
-        this.most_recent_response = response.body
-        this.progress = response.body.progress
-        response.body.success = true
-        return response.body
-    }
-
-    async rank(feature_vectors = null, model_type = null, predict_on_all_models = false, model_index = null, deterministic = false, attempt_restart = false) {
-        if (feature_vectors == null || feature_vectors == undefined) {
-            feature_vectors = this.feature_vectors
-        }
-        pull_reponse = await this.pull(feature_vectors, model_type, predict_on_all_models, model_index, deterministic, attempt_restart)
-        return this.most_recently_ranked_feature_vectors
-    }
-    
-    async rank_with_automatic_restart(feature_vectors = null, model_type = null, predict_on_all_models = false, model_index = null, deterministic = false) {
-        return await this.rank(feature_vectors, model_type, predict_on_all_models, model_index, deterministic, true)
-    } 
-    
-    async select(feature_vectors = null, model_type = null, predict_on_all_models = false, model_index = null, deterministic = false, attempt_restart = false) {
-        if (feature_vectors == null || feature_vectors == undefined) {
-            feature_vectors = this.feature_vectors
-        }
-        await this.pull(feature_vectors, model_type, predict_on_all_models, model_index, deterministic, attempt_restart)
-        return this.most_recent_pull_response['chosen_action_index']
-    }
-
-    async select_with_automatic_restart(feature_vectors = null, model_type = null, predict_on_all_models = false, model_index = null, deterministic = false) {
-        return await this.select(feature_vectors, model_type, predict_on_all_models, model_index, deterministic, true)
-    }
-}
+    def select(
+            self,
+            model_type_name=None,
+            action_feature_vectors=None,
+            context_feature_vector=None,
+            predict_on_all_models=False,
+            model_index=None,
+            deterministic=False
+    ):
+        if action_feature_vectors is None:
+            action_feature_vectors = self.action_feature_vectors
+        if context_feature_vector is None:
+            context_feature_vector = []
+        self.pull(
+            action_feature_vectors,
+            context_feature_vector=context_feature_vector,
+            model_type_name=model_type_name,
+            model_index=model_index,
+            deterministic=deterministic,
+            predict_on_all_models=predict_on_all_models
+        )
+        return self.most_recent_pull_response['chosen_action_index']
 
 
-export class headlineOptimizer extends banditoAPI {
+class headlineOptimizer(banditoAPI):
 
-    constructor(api_key, model_id, list_of_possible_headlines, bandit_metadata=null) {
-
-        var feature_metadata = [{
+    def __init__(
+            self,
+            api_key,
+            model_id,
+            list_of_possible_headlines,
+            model_type_name='EmpiricalRegressor'
+    ):
+        action_feature_metadata = [{
             'name': 'text_to_choose',
             'categorical_or_continuous': 'categorical',
             'possible_values': list_of_possible_headlines
         }]
+        action_feature_vectors = []
 
-        var feature_vectors = []
-        for (var headline of list_of_possible_headlines) {
-            feature_vectors.push([headline])
-        }
+        for headline in list_of_possible_headlines:
+            action_feature_vectors.append([headline])
 
-        var internal_bandit_metadata = {
+        bandit_metadata = {
             'model_id': model_id,
-            'model_type': 'AverageCategoryMembership', 
-              // options include TrailingBayesianLinearRegression, 
-              //                 BayesianLinearRegression, 
-              //                 AverageCategoryMembership
-            'feature_vectors': feature_vectors,
-            'feature_metadata': feature_metadata,
-            'predict_on_all_models': false
+            'model_type_name': model_type_name,
+            'action_feature_metadata': action_feature_metadata,
+            'context_feature_metadata': [],
+            'predict_on_all_models': False
         }
 
-        super(
-            api_key,
-            internal_bandit_metadata.model_id,
-            internal_bandit_metadata.feature_metadata,
-            internal_bandit_metadata.model_type,
-            internal_bandit_metadata.predict_on_all_models,
-            internal_bandit_metadata.feature_vectors,
-            bandit_metadata
+        super().__init__(
+            api_key=api_key,
+            model_id=bandit_metadata.model_id,
+            action_feature_metadata=bandit_metadata.action_feature_metadata,
+            context_feature_metadata=bandit_metadata.context_feature_metadata,
+            model_type_name=bandit_metadata.model_type_name,
+            action_feature_vectors=bandit_metadata.action_feature_vectors,
+            predict_on_all_models=bandit_metadata.predict_on_all_models
         )
-        this.most_recently_selected_headline = null
 
-    }
+        self.most_recently_selected_headline = None
 
-    async selectHeadline() {
-        var action_index = await this.select_with_automatic_restart(
-            this.feature_vectors,
-            this.model_type
+    def selectHeadline(self):
+        action_index = self.select_with_automatic_restart(
+            self.feature_vectors,
+            self.model_type_name
         )
-        this.most_recently_selected_headline = this.feature_vectors[action_index][0]
-        return this.feature_vectors[action_index][0]
-    }
+        self.most_recently_selected_headline = self.feature_vectors[action_index][0]
+        return self.feature_vectors[action_index][0]
 
-    async trainMostRecentlySelectedHeadline(reward) {
-        return this.train([this.most_recently_selected_headline], [reward])
-    }
-}
-
-
-
-export class slideshowOptimizer extends banditoAPI {
-
-    constructor(api_key, model_id, list_of_possible_slides, bandit_metadata = null) {
-
-        var feature_metadata = [{
-            'name': 'slide_name',
-            'categorical_or_continuous': 'categorical',
-            'possible_values': list_of_possible_slides
-        }]
-
-        var feature_vectors = []
-        for (var slide of list_of_possible_slides) {
-            feature_vectors.push([slide])
-        }
-
-        var internal_bandit_metadata = {
-            'model_id': model_id,
-            'model_type': 'AverageCategoryMembership',
-            'feature_vectors': feature_vectors,
-            'feature_metadata': feature_metadata,
-            'predict_on_all_models': false
-        }
-
-        super(
-            api_key,
-            internal_bandit_metadata.model_id,
-            internal_bandit_metadata.feature_metadata,
-            internal_bandit_metadata.model_type,
-            internal_bandit_metadata.predict_on_all_models,
-            internal_bandit_metadata.feature_vectors,
-            bandit_metadata
-        )
-        this.most_recently_selected_headline = null
-
-    }
-
-    async sortSlides() {
-        await this.rank_with_automatic_restart(
-            this.feature_vectors,
-            this.model_type
-        )
-        return
-    }
-
-    async trainSelectedSlide(slide_name) {
-        return this.train([slide_name], 1)
-    }
-
-    async trainClickthrough(slide_name) {
-        var first_slide_shown = this.most_recently_ranked_feature_vectors[0]
-        return this.train([first_slide_shown], 1)
-    }
-
-    async trainFailure(slide_name) {
-        var first_slide_shown = this.most_recently_ranked_feature_vectors[0]
-        return this.train([first_slide_shown], 1)
-    }
-
-}
+    def trainMostRecentlySelectedHeadline(self, reward):
+        return self.train([self.most_recently_selected_headline], [reward])
