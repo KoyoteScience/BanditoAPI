@@ -413,7 +413,7 @@ payload = {
             // boolean for whether to return the complete payload
         'min_count_to_skip_unknown_score', 
             // how many times we need to sample a category before using the data distribution
-    }
+}
 ```
 
 If you pass True to **should_we_return_complete_payload** you also receive these items, along with the entire payload that was passed in:
