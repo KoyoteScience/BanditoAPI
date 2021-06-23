@@ -426,8 +426,6 @@ If you pass True to **should_we_return_complete_payload** you also receive these
         // list of prediction scores for the deterministic model
     'chosen_feature_vector', 
         // feature vector for the chosen_action_index
-    'prediction_distribution_by_action_index',
-        // list-of-lists of predictions for each action index, only populated when predict_on_all_models==True
     'chosen_action_feature_vector',
         // action feature vector for the selected action index, None for pull and train
     'chosen_feature_vector',
@@ -443,9 +441,11 @@ If you pass True to **should_we_return_complete_payload** you also receive these
     'model_intercept_summary_statistics',
         // object including average, standard deviation, and count when predict_on_all_models==True
     'coefficient_distribution',
-        // list of lists, indexed first by coefficient and second by prediction model sample, giving a full distribution of coefficients
+        // list of lists, indexed first by coefficient and second by prediction model sample, giving a full distribution of coefficients, only populated when predict_on_all_models==True
     'intercept_distribution'',
-        // list indexed by prediction model sample, giving a full distribution of the intercept
+        // list indexed by prediction model sample, giving a full distribution of the intercept, only populated when predict_on_all_models==True
+    'prediction_distribution_by_action_index',
+        // list-of-lists of predictions for each action index, only populated when predict_on_all_models==True
     'coefficients_for_deterministic_model',
         // same as model_coefficients, but for the deterministic model
     'intercept_for_deterministic_model',
