@@ -436,16 +436,18 @@ If you pass True to **should_we_return_complete_payload** you also receive these
         // list of coefficients for the model used to make predictions
     'model_intercept,
         // float of intercept for the model used to make predictions
-    'model_coefficient_summary_statistics',
-        // list of objects for each coefficient including average, standard deviation, and count when predict_on_all_models==True
-    'model_intercept_summary_statistics',
-        // object including average, standard deviation, and count when predict_on_all_models==True
     'coefficient_distribution',
         // list of lists, indexed first by coefficient and second by prediction model sample, giving a full distribution of coefficients, only populated when predict_on_all_models==True
     'intercept_distribution'',
         // list indexed by prediction model sample, giving a full distribution of the intercept, only populated when predict_on_all_models==True
     'prediction_distribution_by_action_index',
         // list-of-lists of predictions for each action index, only populated when predict_on_all_models==True
+    'model_coefficient_summary_statistics',
+        // list of objects for each coefficient including average, standard deviation, and count when predict_on_all_models==True
+    'model_intercept_summary_statistics',
+        // object including average, standard deviation, and count when predict_on_all_models==True
+    'prediction_summary_statistics',
+        // list of objects for each action including average, standard deviation, and count of prediction scores when predict_on_all_models==True
     'coefficients_for_deterministic_model',
         // same as model_coefficients, but for the deterministic model
     'intercept_for_deterministic_model',
