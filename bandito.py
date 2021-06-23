@@ -9,9 +9,9 @@ class ModelType(Enum):
         return self.value
 
     SGDRegressor = 'SGDRegressor'
-    BayesianLinearRegression = 'BayesianLinearRegression'
-    TrailingBayesianLinearRegression = 'TrailingBayesianLinearRegression'
-    AverageCategoryMembership = 'AverageCategoryMembership'
+    BayesLinearRegressor = 'BayesLinearRegressor'
+    TrailingBayesLinearRegressor = 'TrailingBayesLinearRegressor'
+    EmpiricalRegressor = 'EmpiricalRegressor'
 
 
 class banditoAPI:
@@ -25,30 +25,52 @@ class banditoAPI:
     def __init__(self,
                  api_key=None,
                  model_id=None,
-                 feature_metadata=None,
-                 model_type='BayesianLinearRegression',
-                 feature_vectors=None,
-                 predict_on_all_models=False
+                 action_feature_metadata=None,
+                 context_feature_metadata=None,
+                 output_metadata=None,
+                 model_type_name='BayesLinearRegressor',
+                 action_feature_vectors=None,
+                 predict_on_all_models=False,
+                 trailing_list_length=None,
+                 coreset_trailing_list_length=None,
+                 should_we_return_complete_payload=False
                  ):
+        if action_feature_metadata is None:
+            action_feature_metadata = []
+        if context_feature_metadata is None:
+            context_feature_metadata = []
+        if context_feature_metadata is None:
+            context_feature_metadata = {
+                'linear_logistic_or_categorical': 'linear'
+            }
         self.api_key = api_key
         self.url = 'https://akn4hgmvuc.execute-api.us-west-2.amazonaws.com/staging/'
         self.model_id = model_id
-        self.feature_metadata = feature_metadata
-        self.model_type = ModelType[model_type]
+        self.action_feature_metadata = action_feature_metadata
+        self.context_feature_metadata = context_feature_metadata
+        self.output_metadata = output_metadata
+        self.model_type_name = model_type_name
         self.predict_on_all_models = predict_on_all_models
-        self.feature_vectors = feature_vectors
+        self.action_feature_vectors = action_feature_vectors
         self.most_recent_restart_response = None
         self.most_recent_pull_response = None
         self.most_recent_train_response = None
         self.most_recent_response = None
+        self.trailing_list_length = trailing_list_length
+        self.coreset_trailing_list_length = coreset_trailing_list_length
+        self.should_we_return_complete_payload = should_we_return_complete_payload
 
     def restart(self):
         payload = {
             'model_id': self.model_id,
-            'model_type': {'name': str(self.model_type)},
+            'model_type_name': self.model_type_name,
             'bandit_mode': 'restart',
             'predict_on_all_models': self.predict_on_all_models,
-            'feature_metadata': self.feature_metadata
+            'action_feature_metadata': self.action_feature_metadata,
+            'context_feature_metadata': self.context_feature_metadata,
+            'output_metadata': self.output_metadata,
+            'trailing_list_length': self.trailing_list_length,
+            'coreset_trailing_list_length': self.coreset_trailing_list_length
         }
         r = requests.post(
             self.url,
@@ -63,27 +85,41 @@ class banditoAPI:
         return r_json
 
     def pull(
-            self, 
-            feature_vectors, 
-            model_type=None, 
-            predict_on_all_models=False, 
+            self,
+            action_feature_vectors,
+            context_feature_vector=None,
+            model_type_name=None,
+            predict_on_all_models=False,
             model_index=None,
-            deterministic=False
+            deterministic=False,
+            should_we_return_complete_payload=None
     ):
 
-        if model_type is None:
-            model_type_dict = {'name': str(self.model_type)}
+        if context_feature_vector is None:
+            context_feature_vector = []
+
+        if model_type_name is None:
+            model_type_name = str(self.model_type_name)
         else:
-            model_type_dict = {'name': str(model_type)}
+            model_type_name = str(model_type_name)
+
+        if should_we_return_complete_payload is None:
+            should_we_return_complete_payload = self.should_we_return_complete_payload
 
         payload = {
             'model_id': self.model_id,
-            'model_type': model_type_dict,
+            'model_type_name': model_type_name,
             'bandit_mode': 'pull',
             'predict_on_all_models': predict_on_all_models,
-            'feature_metadata': self.feature_metadata,
-            'feature_vectors': feature_vectors,
-            'model_index': model_index
+            'action_feature_metadata': self.action_feature_metadata,
+            'context_feature_metadata': self.context_feature_metadata,
+            'output_metadata': self.output_metadata,
+            'action_feature_vectors': action_feature_vectors,
+            'context_feature_vector': context_feature_vector,
+            'model_index': model_index,
+            'trailing_list_length': self.trailing_list_length,
+            'coreset_trailing_list_length': self.coreset_trailing_list_length,
+            'should_we_return_complete_payload': should_we_return_complete_payload
         }
         r = requests.post(
             self.url,
@@ -96,7 +132,7 @@ class banditoAPI:
 
         if deterministic:
             try:
-                r_json['prediction_for_chosen_model'] = r_json['deterministic_prediction']
+                r_json['prediction'] = r_json['deterministic_prediction']
                 r_json['coefficients_for_chosen_model'] = r_json['deterministic_model_coefficients']
                 r_json['intercept_for_chosen_model'] = r_json['deterministic_model_intercept']
             except:
@@ -107,18 +143,35 @@ class banditoAPI:
         return r_json
 
     def train(
-            self, 
-            feature_vectors, 
-            output_values
+            self,
+            action_feature_vector,
+            output_value,
+            context_feature_vector=None,
+            weights=None,
+            should_we_return_complete_payload=None
     ):
+
+        if context_feature_vector is None:
+            context_feature_vector = []
+
+        if should_we_return_complete_payload is None:
+            should_we_return_complete_payload = self.should_we_return_complete_payload
+
         payload = {
             'model_id': self.model_id,
-            'model_type': {'name': 'SGDRegressor'},  # TODO: This currently just overwrites, and should be settable
+            'model_type_name': 'SGDRegressor',  # TODO: This currently just overwrites, and should be settable
             'bandit_mode': 'train',
-            'feature_metadata': self.feature_metadata,
-            'feature_vectors': feature_vectors,
-            'output_values': output_values,
-            'timestamp_of_payload_creation': time.time() * 1000  # to line up with javascript which returns milliseconds
+            'action_feature_metadata': self.action_feature_metadata,
+            'context_feature_metadata': self.context_feature_metadata,
+            'output_metadata': self.output_metadata,
+            'action_feature_vectors': [action_feature_vector],
+            'output_value': output_value,
+            'context_feature_vector': context_feature_vector,
+            'timestamp_of_payload_creation': time.time() * 1000,
+            # to line up with javascript which returns milliseconds
+            'trailing_list_length': self.trailing_list_length,
+            'coreset_trailing_list_length': self.coreset_trailing_list_length,
+            'should_we_return_complete_payload': should_we_return_complete_payload
         }
         r = requests.post(
             self.url,
@@ -133,23 +186,28 @@ class banditoAPI:
         return r_json
 
     def select(
-            self, 
-            model_type=None, 
-            feature_vectors=None, 
-            predict_on_all_models=False, 
-            model_index=None, 
+            self,
+            model_type_name=None,
+            action_feature_vectors=None,
+            context_feature_vector=None,
+            predict_on_all_models=False,
+            model_index=None,
             deterministic=False
     ):
-        if feature_vectors is None:
-            feature_vectors = self.feature_vectors
+        if action_feature_vectors is None:
+            action_feature_vectors = self.action_feature_vectors
+        if context_feature_vector is None:
+            context_feature_vector = []
         self.pull(
-            feature_vectors, 
-            model_type=model_type, 
-            model_index=model_index, 
-            deterministic=deterministic, 
+            action_feature_vectors,
+            context_feature_vector=context_feature_vector,
+            model_type_name=model_type_name,
+            model_index=model_index,
+            deterministic=deterministic,
             predict_on_all_models=predict_on_all_models
         )
         return self.most_recent_pull_response['chosen_action_index']
+
 
 class headlineOptimizer(banditoAPI):
 
@@ -158,41 +216,42 @@ class headlineOptimizer(banditoAPI):
             api_key,
             model_id,
             list_of_possible_headlines,
-            model_type='AverageCategoryMembership'
+            model_type_name='EmpiricalRegressor'
     ):
-        feature_metadata = [{
+        action_feature_metadata = [{
             'name': 'text_to_choose',
             'categorical_or_continuous': 'categorical',
             'possible_values': list_of_possible_headlines
         }]
-        feature_vectors = []
-        
+        action_feature_vectors = []
+
         for headline in list_of_possible_headlines:
-            feature_vectors.append([headline])
-            
+            action_feature_vectors.append([headline])
+
         bandit_metadata = {
             'model_id': model_id,
-            'model_type': model_type,
-            'feature_vectors': feature_vectors,
-            'feature_metadata': feature_metadata,
+            'model_type_name': model_type_name,
+            'action_feature_metadata': action_feature_metadata,
+            'context_feature_metadata': [],
             'predict_on_all_models': False
         }
-        
+
         super().__init__(
             api_key=api_key,
             model_id=bandit_metadata.model_id,
-            feature_metadata=bandit_metadata.feature_metadata,
-            model_type=bandit_metadata.model_type,
-            feature_vectors=bandit_metadata.feature_vectors,
+            action_feature_metadata=bandit_metadata.action_feature_metadata,
+            context_feature_metadata=bandit_metadata.context_feature_metadata,
+            model_type_name=bandit_metadata.model_type_name,
+            action_feature_vectors=bandit_metadata.action_feature_vectors,
             predict_on_all_models=bandit_metadata.predict_on_all_models
         )
-        
+
         self.most_recently_selected_headline = None
 
     def selectHeadline(self):
         action_index = self.select_with_automatic_restart(
             self.feature_vectors,
-            self.model_type
+            self.model_type_name
         )
         self.most_recently_selected_headline = self.feature_vectors[action_index][0]
         return self.feature_vectors[action_index][0]
