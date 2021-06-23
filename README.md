@@ -417,7 +417,7 @@ payload = {
 
 If you pass True to **should_we_return_complete_payload** you also receive these items:
 
-```
+```javascript
     
     'prediction_for_chosen_model', 
         // list of prediction scores for the chosen probablistic model (or the deterministic model if deterministic is set to true)
