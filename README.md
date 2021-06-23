@@ -415,7 +415,7 @@ payload = {
             // how many times we need to sample a category before using the data distribution
 ```
 
-If you pass True to **should_we_return_complete_payload** you also receive these items:
+If you pass True to **should_we_return_complete_payload** you also receive these items, along with the entire payload that was passed in:
 
 ```javascript
     
