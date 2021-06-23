@@ -61,12 +61,16 @@ var headlines_to_consider = [
     'Take the blue pill',
     'Take the red pill',
 ]
-var feature_metadata = [{
+var action_feature_metadata = [{
     'name': 'text_to_choose',
     'categorical_or_continuous': 'categorical',
     'possible_values': headlines_to_consider
 }]
-var feature_vectors = []
+var context_feature_metadata = []
+var output_metadata = {
+    'linear_logistic_or_categorical': 'logistic'
+}
+var action_feature_vectors = []
 for (var headline of list_of_possible_headlines) {
     feature_vectors.push([headline])
 }
@@ -75,12 +79,14 @@ var map_headline_to_reward = {
     'Take the red pill': 0,
 }
 var model_id = 'app_id=code_snippet_example'
-var model_type = 'AverageCategoryMembership'
+var model_type_name = 'EmpiricalRegressor'
 var bandit = banditoAPI(
     api_key_for_bandito,
     model_id,
-    feature_metadata,
-    model_type
+    action_feature_metadata,
+    context_feature_metadata,
+    output_metadata,
+    model_type_name
 )
 
 // Select an action
@@ -127,11 +133,14 @@ headlines_to_consider = [
     'Take the blue pill',
     'Take the red pill',
 ]
-feature_metadata = [{
+action_feature_metadata = [{
     'name': 'text_to_choose',
     'categorical_or_continuous': 'categorical',
     'possible_values': headlines_to_consider
 }]
+output_metadata = {
+    'linear_logistic_or_categorical': 'logistic'
+}
 feature_vectors = []
 for headline in list_of_possible_headlines:
     feature_vectors.append([headline])
@@ -141,12 +150,13 @@ map_headline_to_reward = {
     'Take the red pill': 0,
 }
 model_id = 'app_id=code_snippet_example'
-model_type = 'AverageCategoryMembership'
+model_type_name = 'EmpiricalRegressor'
 bandit = banditoAPI(
-    api_key_for_bandito,
-    model_id,
-    feature_metadata,
-    model_type
+    api_key=api_key_for_bandito,
+    model_id=model_id,
+    action_feature_metadata=action_feature_metadata,
+    output_metadata=output_metadata,
+    model_type_name=model_type_name
 )
 
 // Select an action
@@ -172,15 +182,15 @@ There are four models that can be used with Bandito, identified by string. When 
   * A linear regression stochastic gradient descent regressor. This is a great solution for applications that will see a lot of data (quickly reaching 1000 training rows) where it is beneficial to "forget" old data. It trains quickly on large numbers of features.
 
 *Exact Models*
-* BayesianLinearRegression (default)
+* BayesLinearRegressor (default)
   * see https://github.com/KoyoteScience/BayesianLinearRegressor for details of its implementation)
   * A Bayesian linear regression with ridge regularization constant set to 1e-6. Extremely efficient for large numbers of training rows, but note that each update requires an order complexity of N^3 and storage N^2, where N is the number of continuous eatures and category values, so it is not suitable to problems with very large numbers of features (generally, where N^3 >> L where L is the number of training rows). This model does not "forget" old data.
-* TrailingBayesianLinearRegression
+* TrailingBayesLinearRegressor
   * A Bayesian linear regression with ridge regularization constant set to 1e-6, but only using the last N training rows, where N is set by the user (default N=100), along with a core set of the M most-recently visited trainng rows for each category value, where M is also set by the user (default M=5). This is an excellent solution when only the most recently used data is needed, or when you see noticeable drift in your data. Note that the core set of training is kept around since a user will often discount certain category values early on, and that information would otherwise be eliminated when cutting off the old data.
-* AverageCategoryMembership
-  * The simplest and easiest-to-debug model type, but also extremely versatile. This is only useful for features that are entirely encoded by category values. Basically, the historical performance of each category value is averaged together. This model type learns extremely quickly and communicates easily with the user, and in the case of one categorical feature, is equivalent to a "model free" bandit in the literature.
+* EmpiricalRegressor
+  * The simplest and easiest-to-debug model type, but also extremely versatile. This is only useful for features that are entirely encoded by category values. Basically, the historical performance of each category value is averaged together, with Bayesian component coming from sampling the means of the related Beta distributions. This model type learns extremely quickly and communicates easily with the user, and in the case of one categorical feature (which could be the concatenation of all categorical features), is equivalent to a "model free" bandit in the literature.
 
-**Feature Metadata**
+**Action Feature Metadata**
 
 This is an object requiring the following fields:
 
@@ -192,6 +202,10 @@ This is an object requiring the following fields:
   * a list of values that the feature can assume; any feature vectors that are passed that don't contain one of these values will be ignored.
 * min_value / max_value (only if categorical_or_continuous=='continuous')
   * a float for the minimum or maximum value that the continuous float feature can assume; any feature vectors that are passed with this feature exceeding these limits will be ignored; null values mean that these limits will be ignored and all data will be accepted
+
+**Context Feature Metadata**
+
+Same as Action Feature Metadata, but for the context features, which don't change from action to action, but do change from pull to pull.
 
 **Output Metadata**
 
@@ -210,9 +224,13 @@ bandit = banditoAPI(
         // API key for accessing bandito
      model_id=null,
         // string identifying the unique model or bandit
-     feature_metadata=null,
-        // object containing metadata about the feature vectors (for more information, see below)
-     model_type='LinearAlgebraLinearRegression',
+     action_feature_metadata=null,
+        // object containing metadata about the action feature vectors (for more information, see below)
+     context_feature_metadata=null,
+        // object containing metadata about the context_feature vectors (for more information, see below)
+     output_metadata=null,
+        // object containing metadata about the output values (for more information, see below)
+     model_type_name='BayesLinearRegressor',
         // string, one of ModelType
      predict_on_all_models=false,
         // boolean for whether to run predictions on all models in the probabilistic ensemble (useful for debugging)
@@ -247,9 +265,11 @@ Invocation (same as pull, except that feature_vectors can be omitted if it was p
 
 ```javascript
 bandit.pull(
-    feature_vectors=null,  
-        // a list of lists containing the feature vectors to be scored
-    model_type=null, 
+    action_feature_vectors=null,  
+        // a list of lists containing the action feature vectors to be scored
+    context_feature_vector=null,  
+        // a list of lists containing the context feature vector to be scored
+    model_type_name=null, 
         // string, one of ModelType
     predict_on_all_models=false,  
         // it takes longer to run predictions on all models in the ensemble, but it can be useful for obtaining propensities and distributions of model parameters
@@ -276,9 +296,11 @@ Invocation (same as select):
 
 ```javascript
 bandit.pull(
-    feature_vectors=null,  
-        // a list of lists containing the feature vectors to be scored
-    model_type=null, 
+    action_feature_vectors=null,  
+        // a list of lists containing the action feature vectors to be scored
+    context_feature_vector=null,  
+        // a list of lists containing the context feature vector to be scored
+    model_type_name=null, 
         // string, one of ModelType
     predict_on_all_models=false,  
         // it takes longer to run predictions on all models in the ensemble, but it can be useful for obtaining propensities and distributions of model parameters
@@ -301,9 +323,11 @@ Invocation (same as s:
 
 ```javascript
 bandit.pull(
-    feature_vectors,  
-        // a list of lists containing the feature vectors to be scored
-    model_type=null, 
+    action_feature_vectors=null,  
+        // a list of lists containing the action feature vectors to be scored
+    context_feature_vector=null,  
+        // a list of lists containing the context feature vector to be scored
+    model_type_name=null, 
         // string, one of ModelType
     predict_on_all_models=false,  
         // it takes longer to run predictions on all models in the ensemble, but it can be useful for obtaining propensities and distributions of model parameters
@@ -326,10 +350,12 @@ Invocation:
 
 ```javascript
 bandit.train(
-    feature_vectors,
-        // list-of-lists of feature vectors to train on, can also be a single list containing one feature vector
-    output_values
-        // list of float output values to train on, can also be a single float containing one output value
+    action_feature_vector,
+        // action feature vector to train on
+    context_feature_vector,
+        // context feature vector to train on
+    output_value
+        // float output values to train on
 )
 ```
 
@@ -339,10 +365,51 @@ The full payload from BanditoAPI as described below. In general, this payload is
 
 ### Return Payloads
 
-Both **train** and **pull** return the following payload, which is only needed for debugging or advanced usage.:
+Methods **train**, **pull**, and **select** return the following payload, which is only needed for debugging or advanced usage.:
 
 ```javascript
 payload = {
+        'bandit_metadata',
+            // object containing app, user and model id's
+        'progress',
+            // fractional progress towards exploring categorical features with low amounts of training data
+        'propensity',
+            // propensity of the selection, used for inverse-weighting of training, None for train and pull modes
+        'model_store_size_in_kb'
+            //
+        'statusCode',
+            // "200"
+        'headers',
+            // headers for passing through CORS
+        'alias',
+            // staging or prod
+        'store_updated_model_response',
+            // response from DynamoDB when storing updated model
+        'number_of_updates_for_chosen_model',
+            // if a bootstrap regressor is used (i.e., SGDRegressor), this gives us the number of training rows it has receivedn, None for train and pull modes
+        'chosen_action_index',
+            // the action index chosen, None for train and pull modes
+        'chosen_bootstrap_index',
+            // if a bootstrap regressor is used (i.e., SGDRegressor), this gives us the index of the model used, None for train and pull modes
+        'message',
+            // 'success
+        'min_count_to_skip_unknown_score',
+            // how many times we need to sample a category before using the data distribution
+        'model_type_name',
+            // one of ModelType allowed values
+        'prediction',
+            // prediction scores for each action feature vector, None for train mode
+        'number_of_updates',
+            // total number of training rows thusfar process
+        'bandit_mode',
+            // the method used
+        'time_to_run_in_sec',
+            // internal time to run entire process
+        'minimum_number_of_updates_needed',
+            // number of updates needed to get a non-null result
+        'should_we_return_complete_payload'
+            // boolean for whether to return the complete payload
+
     alias, 
         // staging or prod
     progress, 
@@ -353,8 +420,6 @@ payload = {
         // headers for passing through CORS
     store_updated_model_response, 
         // response from DynamoDB when storing updated model
-    chosen_model_index, 
-        // the chosen model index from the probabilistic ensemble
     number_of_updates_for_chosen_model, 
         // integer number of training rows given to the model chosen from the probabilistic ensemble
     message, 
